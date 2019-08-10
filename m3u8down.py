@@ -112,12 +112,10 @@ class Downloader:
         outfile = ''
         while index < self.ts_total:
             file_name = self.succed.get(index, '')
-            print(file_name, type(file_name))
-            file_name = sys.argv[2]
             if file_name:
                 infile = open(os.path.join(self.dir, file_name), 'rb')
                 if not outfile:
-                    outfile = open(os.path.join(self.dir, file_name.split('.')[0]+'_all.'+file_name.split('.')[-1]), 'wb')
+                    outfile = open(os.path.join(self.dir, sys.argv[2]), 'wb')
                 outfile.write(infile.read())
                 infile.close()
                 os.remove(os.path.join(self.dir, file_name))
