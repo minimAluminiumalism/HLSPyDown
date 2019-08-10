@@ -45,6 +45,7 @@ class Downloader:
             print(r.status_code)
 
     def _download(self, ts_list):
+        print(ts_list)
         self.pool.map(self._worker, ts_list)
         if self.failed:
             ts_list = self.failed
@@ -54,6 +55,7 @@ class Downloader:
     def _worker(self, ts_tuple):
         url = ts_tuple[0]
         index = ts_tuple[1]
+        os._exit(0)
         retry = self.retry
         while retry:
             try:
@@ -91,4 +93,4 @@ class Downloader:
 
 if __name__ == '__main__':
     downloader = Downloader(20)
-    downloader.run(input("Direct m3u8 URL: "), input("store path: "))
+    downloader.run("https://cdn.javsex.net/storage/drive_v2/26/242f9b8a69eb1d7c728558522ee464c1.m3u8", os.getcwd())

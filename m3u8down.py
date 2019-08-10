@@ -54,22 +54,25 @@ class Downloader:
                         response = requests.get(ts_url, stream=True)
                         url_index += 1
                     else:
-                        alarm_info = "ts URL not found, check it manually."
+                        alarm_info = "[Error Info]ts URL not found, check it manually."
                         print("""\033[31m{}\033[0m""".format(alarm_info))
                         os._exit(0)
 
 
             if body:
                 ts_list = [urljoin(base_url, str(n, encoding = "utf-8")) for n in body.split(b'\n') if n and not n.startswith(b"#")]
-                ts_list = list(zip(ts_list, [n for n in range(len(ts_list))]))
+                ts_list = list(zip(ts_list, [n for n in range(len(ts_list))], [base_url for n in range(len(ts_list))]))
                 if ts_list:
                     self.ts_total = len(ts_list)
-                    print(self.ts_total)
-                    g1 = gevent.spawn(self._join_file)
+                    #print(self.ts_total)
+
                     self._download(ts_list)
+                    g1 = gevent.spawn(self._join_file)
                     g1.join()
+
         else:
             print(r.status_code)
+            os._exit(0)
 
 
     def _download(self, ts_list):
@@ -83,20 +86,21 @@ class Downloader:
     def _worker(self, ts_tuple):
         url = ts_tuple[0]
         index = ts_tuple[1]
+        base_url = ts_tuple[2]
         retry = self.retry
         while retry:
             try:
                 r = self.session.get(url, timeout=20)
                 if r.ok:
-                    file_name = url.split('/')[-1].split('?')[0]
-                    print(file_name)
+                    #file_name = url.split('/')[-1].split('?')[0]
+                    file_name = url.replace(base_url, "")
                     with open(os.path.join(self.dir, file_name), 'wb') as f:
                         f.write(r.content)
                     self.succed[index] = file_name
                     return
             except:
                 retry -= 1
-        print('[FAIL]%s' % url)
+        print('[FAILED]%s' % url)
         self.failed.append((url, index))
 
 
@@ -105,7 +109,6 @@ class Downloader:
         outfile = ''
         while index < self.ts_total:
             file_name = self.succed.get(index, '')
-            #file_name = input("File Name: ")
             if file_name:
                 infile = open(os.path.join(self.dir, file_name), 'rb')
                 if not outfile:
@@ -121,4 +124,5 @@ class Downloader:
 
 if __name__ == '__main__':
     downloader = Downloader(20)
-    downloader.run("https://p2.japronx.com/output/347c34fe24859f8612625d9d1772b51e/index.m3u8?md5=pozPMxgNN1bcgvPH8joq8A&expires=1565433966", "/Users/caixuesen/Documents/PythonCrawler/AfreecaTVCrawler/")
+    current_directory = os.getcwd()
+    downloader.run("https://cdn.javsex.net/storage/drive_v2/26/242f9b8a69eb1d7c728558522ee464c1.m3u8", current_directory)
