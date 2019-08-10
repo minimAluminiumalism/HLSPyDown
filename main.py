@@ -33,11 +33,6 @@ class Downloader:
         if r.ok:
             body = r.content
             if body:
-                #for n in body.split(b'\n'):
-                    #if n and not n.startswith(b"#"):
-                        #print(n)
-                        #print(type(n))
-                #os._exit(0)
                 ts_list = [urljoin("https://cdn.javsex.net", str(n, encoding = "utf-8")) for n in body.split(b'\n') if n and not n.startswith(b"#")]
                 ts_list = list(zip(ts_list, [n for n in range(len(ts_list))]))
                 if ts_list:
