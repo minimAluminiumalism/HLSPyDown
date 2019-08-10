@@ -38,8 +38,9 @@ class Downloader:
                 if ts_list:
                     self.ts_total = len(ts_list)
                     print(self.ts_total)
-                    g1 = gevent.spawn(self._join_file)
+                    #g1 = gevent.spawn(self._join_file)
                     self._download(ts_list)
+                    g1 = gevent.spawn(self._join_file)
                     g1.join()
         else:
             print(r.status_code)

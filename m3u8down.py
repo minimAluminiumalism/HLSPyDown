@@ -89,17 +89,18 @@ class Downloader:
         base_url = ts_tuple[2]
         retry = self.retry
         while retry:
-            try:
-                r = self.session.get(url, timeout=20)
-                if r.ok:
-                    #file_name = url.split('/')[-1].split('?')[0]
-                    file_name = url.replace(base_url, "")
-                    with open(os.path.join(self.dir, file_name), 'wb') as f:
-                        f.write(r.content)
-                    self.succed[index] = file_name
-                    return
-            except:
-                retry -= 1
+
+            r = self.session.get(url, timeout=20)
+            if r.ok:
+                #file_name = url.split('/')[-1].split('?')[0]
+                file_name = url.replace(base_url, "")[1:]
+                with open(os.path.join(self.dir, file_name), 'wb') as f:
+                    f.write(r.content)
+                self.succed[index] = file_name
+                os._exit(0)
+                return
+            #except:
+                #retry -= 1
         print('[FAILED]%s' % url)
         self.failed.append((url, index))
 
