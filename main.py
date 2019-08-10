@@ -5,6 +5,7 @@ import gevent
 import requests
 from urllib.parse import urljoin
 import os
+import sys
 import time
 
 class Downloader:
@@ -92,4 +93,4 @@ class Downloader:
 
 if __name__ == '__main__':
     downloader = Downloader(20)
-    downloader.run("https://cdn.javsex.net/storage/drive_v2/26/242f9b8a69eb1d7c728558522ee464c1.m3u8", os.getcwd())
+    downloader.run(sys.argv[1], os.getcwd())
