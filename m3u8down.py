@@ -5,6 +5,7 @@ import gevent
 import requests
 from urllib.parse import urljoin
 import os
+import sys
 import time
 
 class Downloader:
@@ -61,7 +62,7 @@ class Downloader:
 
             if body:
                 ts_list = [urljoin(base_url, str(n, encoding = "utf-8")) for n in body.split(b'\n') if n and not n.startswith(b"#")]
-                ts_list = list(zip(ts_list, [n for n in range(len(ts_list))], [base_url for n in range(len(ts_list))]))
+                ts_list = list(zip(ts_list, [n for n in range(len(ts_list))]))
                 if ts_list:
                     self.ts_total = len(ts_list)
                     #print(self.ts_total)
@@ -86,21 +87,20 @@ class Downloader:
     def _worker(self, ts_tuple):
         url = ts_tuple[0]
         index = ts_tuple[1]
-        base_url = ts_tuple[2]
+        #base_url = ts_tuple[2]
         retry = self.retry
         while retry:
-
-            r = self.session.get(url, timeout=20)
-            if r.ok:
-                #file_name = url.split('/')[-1].split('?')[0]
-                file_name = url.replace(base_url, "")[1:]
-                with open(os.path.join(self.dir, file_name), 'wb') as f:
-                    f.write(r.content)
-                self.succed[index] = file_name
-                os._exit(0)
-                return
-            #except:
-                #retry -= 1
+            try:
+                r = self.session.get(url, timeout=20)
+                if r.ok:
+                    file_name = url.split('/')[-1].split('?')[0]
+                    #file_name = url.replace(base_url, "")[1:]
+                    with open(os.path.join(self.dir, file_name), 'wb') as f:
+                        f.write(r.content)
+                    self.succed[index] = file_name
+                    return
+            except:
+                retry -= 1
         print('[FAILED]%s' % url)
         self.failed.append((url, index))
 
@@ -126,4 +126,4 @@ class Downloader:
 if __name__ == '__main__':
     downloader = Downloader(20)
     current_directory = os.getcwd()
-    downloader.run("https://cdn.javsex.net/storage/drive_v2/26/242f9b8a69eb1d7c728558522ee464c1.m3u8", current_directory)
+    downloader.run(sys.argv[1], current_directory)
