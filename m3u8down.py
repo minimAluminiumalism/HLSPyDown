@@ -111,7 +111,8 @@ class Downloader:
         index = 0
         outfile = ''
         while index < self.ts_total:
-            #file_name = self.succed.get(index, '')
+            file_name = self.succed.get(index, '')
+            print(file_name, type(file_name))
             file_name = sys.argv[2]
             if file_name:
                 infile = open(os.path.join(self.dir, file_name), 'rb')
