@@ -8,6 +8,7 @@ import os
 import sys
 import time
 
+
 class Downloader:
     def __init__(self, pool_size, retry=3):
         self.pool = Pool(pool_size)
@@ -30,10 +31,11 @@ class Downloader:
         if self.dir and not os.path.isdir(self.dir):
             os.makedirs(self.dir)
 
-        # Find the right base URL
         r = self.session.get(m3u8_url, timeout=10)
         if r.ok:
             body = r.content
+
+            # Find the right base URL
             ts_test_list = []
             for n in body.split(b'\n'):
                 if n and not n.startswith(b"#"):
@@ -109,7 +111,8 @@ class Downloader:
         index = 0
         outfile = ''
         while index < self.ts_total:
-            file_name = self.succed.get(index, '')
+            #file_name = self.succed.get(index, '')
+            file_name = sys.argv[2]
             if file_name:
                 infile = open(os.path.join(self.dir, file_name), 'rb')
                 if not outfile:

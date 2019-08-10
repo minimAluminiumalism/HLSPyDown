@@ -33,8 +33,35 @@ class Downloader:
         r = self.session.get(m3u8_url, timeout=10)
         if r.ok:
             body = r.content
+
+            # Find the right base URL
+            ts_test_list = []
+            for n in body.split(b'\n'):
+                if n and not n.startswith(b"#"):
+                    ts_test_list.append(n)
+            ts_url_back = str(ts_test_list[0], encoding="utf-8")
+
+            split_url = m3u8_url.split("/")
+            base_url = split_url[0] + "//" + split_url[2]
+            ts_url = urljoin(base_url, ts_url_back)
+            response = requests.get(ts_url, stream=True)
+            if response.status_code == 200:
+                pass
+            else:
+                url_index = 3
+                while response.status_code != 200:
+                    if url_index <= len(split_url):
+                        base_url = base_url + "/" + split_url[url_index]
+                        ts_url = urljoin(base_url, ts_url_back)
+                        response = requests.get(ts_url, stream=True)
+                        url_index += 1
+                    else:
+                        alarm_info = "[Error Info]ts URL not found, check it manually."
+                        print("""\033[31m{}\033[0m""".format(alarm_info))
+                        os._exit(0)
+
             if body:
-                ts_list = [urljoin("https://cdn.javsex.net", str(n, encoding = "utf-8")) for n in body.split(b'\n') if n and not n.startswith(b"#")]
+                ts_list = [urljoin(base_url, str(n, encoding = "utf-8")) for n in body.split(b'\n') if n and not n.startswith(b"#")]
                 ts_list = list(zip(ts_list, [n for n in range(len(ts_list))]))
                 if ts_list:
                     self.ts_total = len(ts_list)
@@ -93,6 +120,6 @@ class Downloader:
             outfile.close()
 
 if __name__ == '__main__':
-    downloader = Downloader(10)
+    downloader = Downloader(20)
     #downloader.run(sys.argv[1], os.getcwd())
     downloader.run("https://p2.japronx.com/output/dd667300b8929bf90e9f4a4ecb28d748/index.m3u8?md5=SekWuetsVgcwZtD7Cj9lng&expires=1565447870", os.getcwd())
