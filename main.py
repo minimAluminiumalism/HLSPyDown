@@ -45,7 +45,6 @@ class Downloader:
             print(r.status_code)
 
     def _download(self, ts_list):
-        print(ts_list)
         self.pool.map(self._worker, ts_list)
         if self.failed:
             ts_list = self.failed
@@ -55,7 +54,6 @@ class Downloader:
     def _worker(self, ts_tuple):
         url = ts_tuple[0]
         index = ts_tuple[1]
-        os._exit(0)
         retry = self.retry
         while retry:
             try:
