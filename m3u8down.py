@@ -121,6 +121,15 @@ class Downloader:
 
     def _join_file(self, hls_encrypted):
         if hls_encrypted:
+            subprocess.call(
+                [
+                    'ffmpeg', '-protocol_whitelist',
+                    "concat,file,subfile,http,https,tls,rtp,tcp,udp,crypto",
+                    '-allowed_extensions', 'ALL', '-i', 'index.m3u8', '-c', 'copy',
+                    '{}.mp4'.format(sys.argv[2])
+                ]
+            )
+        else:
             index = 0
             outfile = ''
             while index < self.ts_total:
@@ -137,15 +146,6 @@ class Downloader:
                     time.sleep(1)
             if outfile:
                 outfile.close()
-        else:
-            subprocess.call(
-                [
-                    'ffmpeg', '-protocol_whitelist',
-                    "concat,file,subfile,http,https,tls,rtp,tcp,udp,crypto",
-                    '-allowed_extensions', 'ALL', '-i', 'index.m3u8', '-c', 'copy',
-                    '{}.mp4'.format(sys.argv[2])
-                ]
-            )
 
 
 if __name__ == '__main__':
