@@ -19,11 +19,12 @@ class Downloader:
         self.succed = {}
         self.failed = []
         self.ts_total = 0
+        self.headers = {}
 
 
     def _get_http_session(self, pool_connections, pool_maxsize, max_retries):
             session = requests.Session()
-            adapter = requests.adapters.HTTPAdapter(pool_connections=pool_connections, pool_maxsize=pool_maxsize, max_retries=max_retries)
+            adapter = requests.adapters.HTTPAdapter(pool_connections=pool_connections, pool_maxsize=pool_maxsize, max_retries=max_retries, headers=self.headers)
             session.mount('http://', adapter)
             session.mount('https://', adapter)
             return session
