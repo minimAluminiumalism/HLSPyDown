@@ -121,14 +121,25 @@ class Downloader:
 
     def _join_file(self, hls_encrypted):
         if hls_encrypted:
+            if sys.argv[2].endswith(".mp4"):
+                video_name = sys.argv[2].replace(".mp4", "")
+            else:
+                video_name = sys.argv[2]
+
             subprocess.call(
                 [
                     'ffmpeg', '-protocol_whitelist',
                     "concat,file,subfile,http,https,tls,rtp,tcp,udp,crypto",
                     '-allowed_extensions', 'ALL', '-i', 'index.m3u8', '-c', 'copy',
-                    '{}.mp4'.format(sys.argv[2])
+                    '{}.mp4'.format(video_name)
                 ]
             )
+
+            for root, dirs, files in os.walk(os.getcwd()):
+                for name in files:
+                    if name.endswith(".ts"):
+                        os.remove(os.path.join(root, name))
+            os.remove(os.path.join(self.dir, "index.m3u8"))
         else:
             index = 0
             outfile = ''
