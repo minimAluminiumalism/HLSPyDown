@@ -1,12 +1,13 @@
 from gevent import monkey
 monkey.patch_all()
-from gevent.pool import Pool
 import gevent
 import requests
-from urllib.parse import urljoin
 import os
 import sys
 import time
+import subprocess
+from urllib.parse import urljoin
+from gevent.pool import Pool
 
 
 class Downloader:
@@ -19,12 +20,14 @@ class Downloader:
         self.failed = []
         self.ts_total = 0
 
+
     def _get_http_session(self, pool_connections, pool_maxsize, max_retries):
             session = requests.Session()
             adapter = requests.adapters.HTTPAdapter(pool_connections=pool_connections, pool_maxsize=pool_maxsize, max_retries=max_retries)
             session.mount('http://', adapter)
             session.mount('https://', adapter)
             return session
+
 
     def run(self, m3u8_url, dir=''):
         self.dir = dir
@@ -34,6 +37,15 @@ class Downloader:
         r = self.session.get(m3u8_url, timeout=10)
         if r.ok:
             body = r.content
+
+            # Encrypted stream should use FFmpeg rather than traditional way to concat.
+            if "EXT-X-KEY" in str(body, encoding="UTF-8"):
+                hls_encrypted = True
+                with open("index.m3u8", "w") as f:
+                    f.write(str(body, encoding="UTF-8"))
+                f.close()
+            else:
+                hls_encrypted = False
 
             # Find the right base URL
             ts_test_list = []
@@ -70,7 +82,7 @@ class Downloader:
                     #print(self.ts_total)
 
                     self._download(ts_list)
-                    g1 = gevent.spawn(self._join_file)
+                    g1 = gevent.spawn(self._join_file, hls_encrypted)
                     g1.join()
 
         else:
@@ -107,23 +119,34 @@ class Downloader:
         self.failed.append((url, index))
 
 
-    def _join_file(self):
-        index = 0
-        outfile = ''
-        while index < self.ts_total:
-            file_name = self.succed.get(index, '')
-            if file_name:
-                infile = open(os.path.join(self.dir, file_name), 'rb')
-                if not outfile:
-                    outfile = open(os.path.join(self.dir, sys.argv[2]), 'wb')
-                outfile.write(infile.read())
-                infile.close()
-                os.remove(os.path.join(self.dir, file_name))
-                index += 1
-            else:
-                time.sleep(1)
-        if outfile:
-            outfile.close()
+    def _join_file(self, hls_encrypted):
+        if hls_encrypted:
+            index = 0
+            outfile = ''
+            while index < self.ts_total:
+                file_name = self.succed.get(index, '')
+                if file_name:
+                    infile = open(os.path.join(self.dir, file_name), 'rb')
+                    if not outfile:
+                        outfile = open(os.path.join(self.dir, sys.argv[2]), 'wb')
+                    outfile.write(infile.read())
+                    infile.close()
+                    os.remove(os.path.join(self.dir, file_name))
+                    index += 1
+                else:
+                    time.sleep(1)
+            if outfile:
+                outfile.close()
+        else:
+            subprocess.call(
+                [
+                    'ffmpeg', '-protocol_whitelist',
+                    "concat,file,subfile,http,https,tls,rtp,tcp,udp,crypto",
+                    '-allowed_extensions', 'ALL', '-i', 'index.m3u8', '-c', 'copy',
+                    '{}.mp4'.format(sys.argv[2])
+                ]
+            )
+
 
 if __name__ == '__main__':
     downloader = Downloader(20)
