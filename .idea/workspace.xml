@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="77aa1510-d83d-4dce-8097-2c158a667dd6" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+    <list default="true" id="77aa1510-d83d-4dce-8097-2c158a667dd6" name="Default" comment="new function added: progress bar display while downloading.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -163,7 +161,7 @@
       <updated>1565428715699</updated>
       <workItem from="1565530229940" duration="1842000" />
       <workItem from="1565581354663" duration="24000" />
-      <workItem from="1565594149668" duration="7901000" />
+      <workItem from="1565594149668" duration="10871000" />
     </task>
     <task id="LOCAL-00001" summary="new function added: customize requests headers">
       <created>1565517655947</created>
@@ -200,7 +198,21 @@
       <option name="project" value="LOCAL" />
       <updated>1565602777845</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="new function added: progress bar display while downloading.">
+      <created>1565603084145</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1565603084145</updated>
+    </task>
+    <task id="LOCAL-00007" summary="new function added: progress bar display while downloading.">
+      <created>1565619851510</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1565619851510</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
