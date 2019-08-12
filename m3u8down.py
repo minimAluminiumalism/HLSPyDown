@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import subprocess
+from progressbar import *
 from urllib.parse import urljoin
 from gevent.pool import Pool
 
@@ -19,16 +20,19 @@ class Downloader:
         self.succed = {}
         self.failed = []
         self.ts_total = 0
-        self.headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"}
-
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
+        }
+        self.ts_file_index = 0
+        self.widgets = ['Progress: ', Percentage(), ' ', Bar('#'), ' ', Timer(), ' ', ETA(), ' ', FileTransferSpeed()]
+        self.pbar = ProgressBar(widgets=self.widgets, maxval=10*self.ts_total).start()
 
     def _get_http_session(self, pool_connections, pool_maxsize, max_retries):
-            session = requests.Session()
-            adapter = requests.adapters.HTTPAdapter(pool_connections=pool_connections, pool_maxsize=pool_maxsize, max_retries=max_retries)
-            session.mount('http://', adapter)
-            session.mount('https://', adapter)
-            return session
-
+        session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(pool_connections=pool_connections, pool_maxsize=pool_maxsize, max_retries=max_retries)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        return session
 
     def run(self, m3u8_url, dir=''):
         self.dir = dir
@@ -74,14 +78,14 @@ class Downloader:
                         print("""\033[31m{}\033[0m""".format(alarm_info))
                         os._exit(0)
 
-
             if body:
-                ts_list = [urljoin(base_url, str(n, encoding = "utf-8")) for n in body.split(b'\n') if n and not n.startswith(b"#")]
+                ts_list = [urljoin(base_url, str(n, encoding="utf-8")) for n in body.split(b'\n') if
+                           n and not n.startswith(b"#")]
                 ts_list = list(zip(ts_list, [n for n in range(len(ts_list))]))
                 if ts_list:
                     self.ts_total = len(ts_list)
                     # print(self.ts_total)
-
+                    self.pbar = ProgressBar(widgets=self.widgets, maxval=self.ts_total).start()
                     self._download(ts_list)
                     g1 = gevent.spawn(self._join_file, hls_encrypted)
                     g1.join()
@@ -90,35 +94,35 @@ class Downloader:
             print(r.status_code)
             os._exit(0)
 
-
     def _download(self, ts_list):
         self.pool.map(self._worker, ts_list)
         if self.failed:
             ts_list = self.failed
             self.failed = []
             self._download(ts_list)
-
+        self.pbar.start().finish()
 
     def _worker(self, ts_tuple):
         url = ts_tuple[0]
         index = ts_tuple[1]
         # base_url = ts_tuple[2]
+        ts_file_index = 0
         retry = self.retry
         while retry:
-            try:
-                r = self.session.get(url, timeout=20)
-                if r.ok:
-                    file_name = url.split('/')[-1].split('?')[0]
-                    # file_name = url.replace(base_url, "")[1:]
-                    with open(os.path.join(self.dir, file_name), 'wb') as f:
-                        f.write(r.content)
-                    self.succed[index] = file_name
-                    return
-            except:
-                retry -= 1
+            #try:
+            r = self.session.get(url, timeout=20)
+            if r.ok:
+                file_name = url.split('/')[-1].split('?')[0]
+                self.pbar.update(self.ts_file_index*10+1)
+                self.ts_file_index += 1
+                with open(os.path.join(self.dir, file_name), 'wb') as f:
+                    f.write(r.content)
+                self.succed[index] = file_name
+                return
+            #except:
+                #retry -= 1
         print('[FAILED]%s' % url)
         self.failed.append((url, index))
-
 
     def _join_file(self, hls_encrypted):
         if hls_encrypted:
