@@ -25,7 +25,7 @@ class Downloader:
         }
         self.ts_file_index = 0
         self.widgets = ['Progress: ', Percentage(), ' ', Bar('#'), ' ', Timer(), ' ', ETA(), ' ', FileTransferSpeed()]
-        self.pbar = ProgressBar(widgets=self.widgets, maxval=10*self.ts_total).start()
+        self.pbar = ProgressBar(widgets=self.widgets, maxval=self.ts_total)
 
     def _get_http_session(self, pool_connections, pool_maxsize, max_retries):
         session = requests.Session()
@@ -84,7 +84,7 @@ class Downloader:
                 ts_list = list(zip(ts_list, [n for n in range(len(ts_list))]))
                 if ts_list:
                     self.ts_total = len(ts_list)
-                    # print(self.ts_total)
+                    print(self.ts_total)
                     self.pbar = ProgressBar(widgets=self.widgets, maxval=self.ts_total).start()
                     self._download(ts_list)
                     g1 = gevent.spawn(self._join_file, hls_encrypted)
@@ -109,18 +109,19 @@ class Downloader:
         ts_file_index = 0
         retry = self.retry
         while retry:
-            #try:
-            r = self.session.get(url, timeout=20)
-            if r.ok:
-                file_name = url.split('/')[-1].split('?')[0]
-                self.pbar.update(self.ts_file_index*10+1)
-                self.ts_file_index += 1
-                with open(os.path.join(self.dir, file_name), 'wb') as f:
-                    f.write(r.content)
-                self.succed[index] = file_name
-                return
-            #except:
-                #retry -= 1
+            try:
+                r = self.session.get(url, timeout=20)
+                if r.ok:
+                    file_name = url.split('/')[-1].split('?')[0]
+                    self.pbar.update(self.ts_file_index+1)
+                    self.ts_file_index += 1
+                    with open(os.path.join(self.dir, file_name), 'wb') as f:
+                        f.write(r.content)
+                    self.succed[index] = file_name
+                    return
+            except:
+                retry -= 1
+
         print('[FAILED]%s' % url)
         self.failed.append((url, index))
 
