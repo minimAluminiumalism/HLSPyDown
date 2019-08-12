@@ -163,4 +163,4 @@ class Downloader:
 if __name__ == '__main__':
     downloader = Downloader(20)
     current_directory = os.getcwd()
-    downloader.run("https://s3172.javsex.net/srv213/hls_ok/195.48/appid-5964/hls_720_.m3u8", current_directory)
+    downloader.run(sys.argv[1], current_directory)
