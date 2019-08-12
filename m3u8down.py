@@ -6,7 +6,7 @@ import os
 import sys
 import time
 import subprocess
-from progressbar import *
+import progressbar
 from urllib.parse import urljoin
 from gevent.pool import Pool
 
@@ -24,8 +24,13 @@ class Downloader:
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
         }
         self.ts_file_index = 0
-        self.widgets = ['Progress: ', Percentage(), ' ', Bar('#'), ' ', Timer(), ' ', ETA(), ' ', FileTransferSpeed()]
-        self.pbar = ProgressBar(widgets=self.widgets, maxval=self.ts_total)
+        # self.widgets = ['Progress: ', Percentage(), ' ', Bar('#'), ' ', Timer(), ' ', ETA(), ' ', FileTransferSpeed()]
+        self.widgets = [progressbar.Bar(marker="■", left="[", right="]"),
+                        progressbar.Percentage(), " | ",
+                        progressbar.FileTransferSpeed(), " | ",
+                        progressbar.SimpleProgress(), " | ",
+                        progressbar.ETA()]
+        self.pbar = progressbar.ProgressBar(widgets=self.widgets, maxval=self.ts_total)
 
     def _get_http_session(self, pool_connections, pool_maxsize, max_retries):
         session = requests.Session()
@@ -85,7 +90,7 @@ class Downloader:
                 if ts_list:
                     self.ts_total = len(ts_list)
                     print(self.ts_total)
-                    self.pbar = ProgressBar(widgets=self.widgets, maxval=self.ts_total).start()
+                    self.pbar = progressbar.ProgressBar(widgets=self.widgets, maxval=self.ts_total).start()
                     self._download(ts_list)
                     g1 = gevent.spawn(self._join_file, hls_encrypted)
                     g1.join()
