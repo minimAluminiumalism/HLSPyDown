@@ -19,12 +19,12 @@ class Downloader:
         self.succed = {}
         self.failed = []
         self.ts_total = 0
-        self.headers = {}
+        self.headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"}
 
 
     def _get_http_session(self, pool_connections, pool_maxsize, max_retries):
             session = requests.Session()
-            adapter = requests.adapters.HTTPAdapter(pool_connections=pool_connections, pool_maxsize=pool_maxsize, max_retries=max_retries, headers=self.headers)
+            adapter = requests.adapters.HTTPAdapter(pool_connections=pool_connections, pool_maxsize=pool_maxsize, max_retries=max_retries)
             session.mount('http://', adapter)
             session.mount('https://', adapter)
             return session
@@ -35,7 +35,7 @@ class Downloader:
         if self.dir and not os.path.isdir(self.dir):
             os.makedirs(self.dir)
 
-        r = self.session.get(m3u8_url, timeout=10)
+        r = self.session.get(m3u8_url, timeout=10, headers=self.headers)
         if r.ok:
             body = r.content
 
@@ -80,7 +80,7 @@ class Downloader:
                 ts_list = list(zip(ts_list, [n for n in range(len(ts_list))]))
                 if ts_list:
                     self.ts_total = len(ts_list)
-                    #print(self.ts_total)
+                    # print(self.ts_total)
 
                     self._download(ts_list)
                     g1 = gevent.spawn(self._join_file, hls_encrypted)
@@ -102,14 +102,14 @@ class Downloader:
     def _worker(self, ts_tuple):
         url = ts_tuple[0]
         index = ts_tuple[1]
-        #base_url = ts_tuple[2]
+        # base_url = ts_tuple[2]
         retry = self.retry
         while retry:
             try:
                 r = self.session.get(url, timeout=20)
                 if r.ok:
                     file_name = url.split('/')[-1].split('?')[0]
-                    #file_name = url.replace(base_url, "")[1:]
+                    # file_name = url.replace(base_url, "")[1:]
                     with open(os.path.join(self.dir, file_name), 'wb') as f:
                         f.write(r.content)
                     self.succed[index] = file_name
@@ -163,4 +163,4 @@ class Downloader:
 if __name__ == '__main__':
     downloader = Downloader(20)
     current_directory = os.getcwd()
-    downloader.run(sys.argv[1], current_directory)
+    downloader.run("https://s3172.javsex.net/srv213/hls_ok/195.48/appid-5964/hls_720_.m3u8", current_directory)
