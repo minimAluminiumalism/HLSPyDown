@@ -121,8 +121,6 @@ class Downloader:
                             os._exit(0)
                             self.config_m3u8()
 
-                print(ts_list[0])
-                os._exit(0)
                 ts_list = list(zip(ts_list, [n for n in range(len(ts_list))]))
                 if ts_list:
                     self.ts_total = len(ts_list)
