@@ -22,6 +22,7 @@ class Downloader:
         self.ts_total = 0
         self.headers = {
         }
+        self.succed = {}
         self.cid = cid
         self.ts_file_index = 0
         self.pbar = SimpleProgressBar(1, self.cid, self.ts_file_index, self.ts_total).update_received(0)
@@ -126,7 +127,6 @@ class Downloader:
                     self.ts_total = len(ts_list)
                     self._download(ts_list)
                     self._join_file(hls_encrypted, cid)
-                self.succeded_recorder(cid)
                 self.ts_file_index = 0
                 self.ts_total = 0
 
@@ -167,6 +167,7 @@ class Downloader:
                 with open(os.path.join(self.dir, file_name), 'wb') as f:
                     f.write(r.content)
                     f.close()
+                self.succed[index] = file_name
                 return
             except Exception as e:
                 print("\n", e)
@@ -193,7 +194,7 @@ class Downloader:
             index = 0
             outfile = ''
             while index < self.ts_total:
-                file_name = self.cid.get(index, '')
+                file_name = self.succed.get(index, '')
                 if file_name:
                     infile = open(os.path.join(self.dir, file_name), 'rb')
                     if not outfile:
