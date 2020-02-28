@@ -193,7 +193,7 @@ class Downloader:
             index = 0
             outfile = ''
             while index < self.ts_total:
-                file_name = self.succed.get(index, '')
+                file_name = self.cid.get(index, '')
                 if file_name:
                     infile = open(os.path.join(self.dir, file_name), 'rb')
                     if not outfile:
