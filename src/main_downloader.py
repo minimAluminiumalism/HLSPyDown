@@ -27,7 +27,6 @@ class Downloader:
         self.ts_file_index = 0
         self.pbar = SimpleProgressBar(1, self.cid, self.ts_file_index, self.ts_total).update_received(0)
 
-
     def _get_http_session(self, pool_connections, pool_maxsize, max_retries):
         session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(pool_connections=pool_connections, pool_maxsize=pool_maxsize, max_retries=max_retries)
@@ -58,7 +57,6 @@ class Downloader:
             if str(body).count("https://", 0, len(body)) >= 10:
                 # ts file url have same perfix with m3u8 file.
                 same_perfix_mark = True
-
             # ts file have a different perfix with m3u8 file, then find the right base URL.
             else:
                 same_perfix_mark = False
@@ -106,7 +104,10 @@ class Downloader:
                     patterns = re.compile("URI=\"(.*?)\"")
                     m3u8_key_url = re.findall(patterns, m3u8_key_line)[0]
                     if "https://" or "http://" not in m3u8_key_url:
-                        m3u8_key_url = urljoin(base_url, m3u8_key_url)
+                        if same_perfix_mark:
+                            m3u8_key_url = urljoin(m3u8_url, m3u8_key_url)
+                        else:
+                            m3u8_key_url = urljoin(base_url, m3u8_key_url)
                     key_response = requests.get(m3u8_key_url, headers=self.headers)
                     if key_response.status_code == 200:
                         with open("{}.key".format(cid), "wb") as f:
@@ -209,10 +210,9 @@ class Downloader:
                 outfile.close()
 
 
-
 if __name__ == '__main__':
     m3u8_url = sys.argv[1]
     cid = sys.argv[2]
     current_directory = os.getcwd()
-    downloader = Downloader(80, cid)
+    downloader = Downloader(20, cid)
     downloader.run(m3u8_url, cid, current_directory)
