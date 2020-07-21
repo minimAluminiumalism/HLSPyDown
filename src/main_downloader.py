@@ -122,7 +122,6 @@ class Downloader:
                             time.sleep(2)
                             os._exit(0)
                     self.config_m3u8(same_perfix_mark)
-                    os._exit(0)
                 ts_list = list(zip(ts_list, [n for n in range(len(ts_list))]))
                 if ts_list:
                     self.ts_total = len(ts_list)
@@ -167,6 +166,10 @@ class Downloader:
         while retry:
             try:
                 r = self.session.get(url, timeout=50, headers=self.headers)
+                # exception detection module, experimental!
+                if r.status_code != 200:
+                    print(r.status_code)
+                    os._exit(0)
 
                 file_name = url.split('/')[-1].split('?')[0]
                 self.pbar = SimpleProgressBar(self.ts_total, self.cid, self.ts_file_index, self.ts_total).update_received(self.ts_file_index)
@@ -220,5 +223,5 @@ if __name__ == '__main__':
     m3u8_url = sys.argv[1]
     cid = sys.argv[2]
     current_directory = os.getcwd()
-    downloader = Downloader(20, cid)
+    downloader = Downloader(100, cid)
     downloader.run(m3u8_url, cid, current_directory)
