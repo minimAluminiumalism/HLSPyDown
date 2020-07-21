@@ -121,7 +121,7 @@ class Downloader:
                                   "\n", """\033[31m{}\033[0m""".format("exiting..."))
                             time.sleep(2)
                             os._exit(0)
-                            self.config_m3u8()
+                        self.config_m3u8()
 
                 ts_list = list(zip(ts_list, [n for n in range(len(ts_list))]))
                 if ts_list:
