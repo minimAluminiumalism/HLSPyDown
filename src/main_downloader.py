@@ -121,7 +121,8 @@ class Downloader:
                                   "\n", """\033[31m{}\033[0m""".format("exiting..."))
                             time.sleep(2)
                             os._exit(0)
-                    self.config_m3u8()
+                    self.config_m3u8(same_perfix_mark)
+                    os._exit(0)
                 ts_list = list(zip(ts_list, [n for n in range(len(ts_list))]))
                 if ts_list:
                     self.ts_total = len(ts_list)
@@ -141,13 +142,19 @@ class Downloader:
             else:
                 os._exit(0)
 
-    def config_m3u8(self):
+    def config_m3u8(self, same_perfix_mark):
         f = open('{}.m3u8'.format(self.cid), 'r+')
         flist = f.readlines()
-        flist[4] = '#EXT-X-KEY:METHOD=AES-128,URI="{}.key"'.format(self.cid) + "\n"
+        for i in range(0, len(flist)):
+            if 'EXT-X-KEY' in flist[i]:
+                patterns = re.compile('URI=\"(.*?)\"')
+                raw_key_url = re.findall(patterns, flist[i])[0]
+                flist[i] = flist[i].replace(raw_key_url, '{}.key'.format(self.cid))
+            elif flist[i].startswith('https'):
+                flist[i] = flist[i].split('/')[-1]
+            i += 1
         f = open('{}.m3u8'.format(self.cid), 'w+')
         f.writelines(flist)
-
 
     def _download(self, ts_list):
         self.pool.map(self._worker, ts_list)
