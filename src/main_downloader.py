@@ -26,6 +26,7 @@ class Downloader:
         self.cid = cid
         self.ts_file_index = 0
         self.pbar = SimpleProgressBar(1, self.cid, self.ts_file_index, self.ts_total).update_received(0)
+        self.failed_list = []
 
     def _get_http_session(self, pool_connections, pool_maxsize, max_retries):
         session = requests.Session()
@@ -169,8 +170,7 @@ class Downloader:
                 # exception detection module, experimental!
                 if r.status_code != 200:
                     print(r.status_code)
-                    os._exit(0)
-
+                    self.failed_list.append(url)
                 file_name = url.split('/')[-1].split('?')[0]
                 self.pbar = SimpleProgressBar(self.ts_total, self.cid, self.ts_file_index, self.ts_total).update_received(self.ts_file_index)
                 self.ts_file_index += 1
@@ -182,6 +182,7 @@ class Downloader:
             except Exception as e:
                 print("\n", e)
                 retry -= 1
+        print(self.failed_list)
         return
 
     def _join_file(self, hls_encrypted, cid):
