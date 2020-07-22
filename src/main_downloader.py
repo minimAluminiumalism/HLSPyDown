@@ -185,7 +185,7 @@ class Downloader:
                     with open(os.path.join(self.dir, file_name), 'wb') as f:
                         f.write(r.content)
                         f.close()
-                return
+                # return
             except Exception as e:
                 print(e)
                 retry -= 1
