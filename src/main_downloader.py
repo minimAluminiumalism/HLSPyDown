@@ -163,34 +163,36 @@ class Downloader:
         f.writelines(flist)
 
     def _download(self, ts_list):
-        self.pool.map(self._worker, ts_list)
+        while not self.retry_tag or len(self.failed_list) > 10:
+            self.pool.map(self._worker, ts_list)
+            time.sleep(5)
 
     def _worker(self, ts_tuple):
         url = ts_tuple[0]
         index = ts_tuple[1]
         ts_file_index = 0
         retry = self.retry
-        while not self.retry_tag or len(self.failed_list) > 10:
-            try:
-                r = self.session.get(url, timeout=50, headers=self.headers)
-                if r.status_code != 200:
-                    print(r.status_code)
-                    print(url.split('/')[-1].split('?')[0])
-                    self.failed_list.append(url)
-                else:
-                    file_name = url.split('/')[-1].split('?')[0]
-                    self.pbar = SimpleProgressBar(self.ts_total, self.cid, self.ts_file_index,
-                                                  self.ts_total).update_received(self.ts_file_index)
-                    self.ts_file_index += 1
-                    with open(os.path.join(self.dir, file_name), 'wb') as f:
-                        f.write(r.content)
-                        f.close()
-                # return
-            except Exception as e:
-                print(e)
-                retry -= 1
-            self.retry_tag = True
-            time.sleep(5)
+
+        try:
+            r = self.session.get(url, timeout=50, headers=self.headers)
+            if r.status_code != 200:
+                print(r.status_code)
+                print(url.split('/')[-1].split('?')[0])
+                self.failed_list.append(url)
+            else:
+                file_name = url.split('/')[-1].split('?')[0]
+                self.pbar = SimpleProgressBar(self.ts_total, self.cid, self.ts_file_index,
+                                              self.ts_total).update_received(self.ts_file_index)
+                self.ts_file_index += 1
+                with open(os.path.join(self.dir, file_name), 'wb') as f:
+                    f.write(r.content)
+                    f.close()
+                self.retry_tag = True
+            return
+        except Exception as e:
+            print(e)
+            retry -= 1
+        self.retry_tag = True
         return
 
     def download_retry(self):
