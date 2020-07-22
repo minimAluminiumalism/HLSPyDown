@@ -21,12 +21,15 @@ class Downloader:
         self.dir = ''
         self.ts_total = 0
         self.headers = {
+            "User-Agent": json.load(open("../header_config.json", "r")).get("headers"),
+            "Cookie": json.load(open("../header_config.json", "r")).get("Cookie")
         }
         self.succed = {}
         self.cid = cid
         self.ts_file_index = 0
         self.pbar = SimpleProgressBar(1, self.cid, self.ts_file_index, self.ts_total).update_received(0)
         self.failed_list = []
+        self.retry_tag = False
 
     def _get_http_session(self, pool_connections, pool_maxsize, max_retries):
         session = requests.Session()
@@ -127,6 +130,9 @@ class Downloader:
                 if ts_list:
                     self.ts_total = len(ts_list)
                     self._download(ts_list)
+                    print('-' * 30)
+                    print('-' * 30)
+                    self.download_retry()
                     self._join_file(hls_encrypted, cid)
                 self.ts_file_index = 0
                 self.ts_total = 0
@@ -164,26 +170,45 @@ class Downloader:
         index = ts_tuple[1]
         ts_file_index = 0
         retry = self.retry
-        while retry:
+        while not self.retry_tag or len(self.failed_list) > 10:
             try:
                 r = self.session.get(url, timeout=50, headers=self.headers)
-                # exception detection module, experimental!
                 if r.status_code != 200:
                     print(r.status_code)
+                    print(url.split('/')[-1].split('?')[0])
                     self.failed_list.append(url)
-                file_name = url.split('/')[-1].split('?')[0]
-                self.pbar = SimpleProgressBar(self.ts_total, self.cid, self.ts_file_index, self.ts_total).update_received(self.ts_file_index)
-                self.ts_file_index += 1
-                with open(os.path.join(self.dir, file_name), 'wb') as f:
-                    f.write(r.content)
-                    f.close()
-                self.succed[index] = file_name
+                else:
+                    file_name = url.split('/')[-1].split('?')[0]
+                    self.pbar = SimpleProgressBar(self.ts_total, self.cid, self.ts_file_index,
+                                                  self.ts_total).update_received(self.ts_file_index)
+                    self.ts_file_index += 1
+                    with open(os.path.join(self.dir, file_name), 'wb') as f:
+                        f.write(r.content)
+                        f.close()
                 return
             except Exception as e:
-                print("\n", e)
+                print(e)
                 retry -= 1
-        print(self.failed_list)
+            self.retry_tag = True
+            time.sleep(5)
         return
+
+    def download_retry(self):
+        while len(self.failed_list) > 10:
+            time.sleep(10)
+            for url in self.failed_list:
+                r = requests.get(url, headers=self.headers)
+                file_name = url.split('/')[-1].split('?')[0]
+                if r.status_code == 200:
+                    self.failed_list.remove(url)
+                    self.pbar = SimpleProgressBar(self.ts_total, self.cid, self.ts_file_index,
+                                                  self.ts_total).update_received(self.ts_file_index)
+                    with open(os.path.join(self.dir, file_name), 'wb') as f:
+                        f.write(r.content)
+                        f.close()
+                    self.ts_file_index += 1
+                else:
+                    print(r.status_code, file_name)
 
     def _join_file(self, hls_encrypted, cid):
         if hls_encrypted:
