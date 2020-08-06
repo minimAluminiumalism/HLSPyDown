@@ -130,9 +130,6 @@ class Downloader:
                 if ts_list:
                     self.ts_total = len(ts_list)
                     self._download(ts_list)
-                    print('-' * 30)
-                    print('-' * 30)
-                    self.download_retry()
                     self._join_file(hls_encrypted, cid)
                 self.ts_file_index = 0
                 self.ts_total = 0
@@ -163,9 +160,13 @@ class Downloader:
         f.writelines(flist)
 
     def _download(self, ts_list):
-        while not self.retry_tag or len(self.failed_list) > 10:
-            self.pool.map(self._worker, ts_list)
-            time.sleep(5)
+        self.pool.map(self._worker, ts_list)
+        if len(self.failed_list) > 10:
+            self.failed_list_retry = list(zip(self.failed_list, [n for n in range(len(self.failed_list))]))
+        while len(self.failed_list_retry) > 10:
+            print('retry...')
+            self.pool.map(self._worker, self.failed_list_retry)
+            time.sleep(10)
 
     def _worker(self, ts_tuple):
         url = ts_tuple[0]
@@ -251,5 +252,5 @@ if __name__ == '__main__':
     m3u8_url = sys.argv[1]
     cid = sys.argv[2]
     current_directory = os.getcwd()
-    downloader = Downloader(100, cid)
+    downloader = Downloader(20, cid)
     downloader.run(m3u8_url, cid, current_directory)
