@@ -29,6 +29,7 @@ class Downloader:
         self.ts_file_index = 0
         self.pbar = SimpleProgressBar(1, self.cid, self.ts_file_index, self.ts_total).update_received(0)
         self.failed_list = []
+        self.failed_list_retry = []
         self.retry_tag = False
 
     def _get_http_session(self, pool_connections, pool_maxsize, max_retries):
