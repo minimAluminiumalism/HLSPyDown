@@ -189,7 +189,8 @@ class Downloader:
                 with open(os.path.join(self.dir, file_name), 'wb') as f:
                     f.write(r.content)
                     f.close()
-                self.retry_tag = True
+                if ts_tuple in self.failed_list_retry:
+                    self.failed_list_retry.remove(ts_tuple)
             return
         except Exception as e:
             print(e)
