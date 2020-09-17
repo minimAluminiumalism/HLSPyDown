@@ -127,8 +127,10 @@ class Downloader:
                             time.sleep(2)
                             os._exit(0)
                     self.config_m3u8(same_perfix_mark)
-                print(len(ts_list), ts_list[0])
-                os._exit(0)
+
+                for i in ts_list:
+                    r = requests.get(i, headers=self.headers)
+                    print(r.status_code)
                 # ts_list = list(zip(ts_list, [n for n in range(len(ts_list))]))
                 # if ts_list:
                 #     self.ts_total = len(ts_list)
