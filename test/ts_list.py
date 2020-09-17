@@ -97,7 +97,7 @@ def list_generator():
                         os._exit(0)
                 config_m3u8(same_perfix_mark)
 
-            print(len(ts_list))
+            return ts_list
 
 
 def config_m3u8(same_perfix_mark):
@@ -115,5 +115,3 @@ def config_m3u8(same_perfix_mark):
     f = open('{}.m3u8'.format(cid), 'w+')
     f.writelines(flist)
 
-
-list_generator()
